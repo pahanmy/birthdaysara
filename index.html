@@ -352,12 +352,18 @@
             if (!slideshowElement) return;
 
             let currentImageIndex = 0;
-            slideshowElement.src = slideshowImages[0]; // Set initial image
+            slideshowElement.src = slideshowImages[currentImageIndex]; // Set initial image
 
             setInterval(() => {
                 slideshowElement.style.opacity = '0'; // Start fade out
                 setTimeout(() => {
-                    currentImageIndex = (currentImageIndex + 1) % slideshowImages.length;
+                    // Choose a new random index that is different from the current one
+                    let newImageIndex = Math.floor(Math.random() * slideshowImages.length);
+                    while (newImageIndex === currentImageIndex) {
+                        newImageIndex = Math.floor(Math.random() * slideshowImages.length);
+                    }
+                    currentImageIndex = newImageIndex;
+                    
                     slideshowElement.src = slideshowImages[currentImageIndex];
                     slideshowElement.style.opacity = '1'; // Fade in
                 }, 500); // Match CSS transition duration
