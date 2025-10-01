@@ -66,7 +66,7 @@
         .modal-visible .modal-content {
             transform: scale(1);
         }
-        /* Wishes scrollbar */
+         /* Wishes scrollbar */
         #wishes-container::-webkit-scrollbar {
             width: 8px;
         }
@@ -103,7 +103,7 @@
             
             <!-- Gambar Sara -->
             <div class="my-6">
-                <img src="https://i.imgur.com/xdhPOrM.jpg" alt="Gambar Sara Syahirah" class="mx-auto w-36 h-36 rounded-full object-cover border-4 border-white shadow-lg ring-4 ring-pink-400">
+                <img src="https://i.imgur.com/xdhPOrM.jpg" alt="Gambar Sara Syahirah" class="mx-auto w-48 h-48 rounded-full object-cover border-4 border-white shadow-lg ring-4 ring-pink-400">
             </div>
             
             <!-- Countdown Timer -->
@@ -165,8 +165,8 @@
             <div class="mt-10 border-t-2 border-dashed border-pink-300 pt-6">
                  <h2 class="font-cocomelon text-4xl text-white mb-4">Buku Ucapan Digital 📖</h2>
                  <div id="wishes-container" class="max-h-80 overflow-y-auto p-4 bg-pink-50 rounded-lg space-y-4">
-                     <!-- Wishes will be loaded here -->
-                     <p id="loading-wishes" class="text-gray-500 italic">Memuatkan ucapan...</p>
+                     <!-- Status and wishes will be loaded here -->
+                     <p id="wishes-status" class="text-gray-500 italic">Menyambung ke Buku Ucapan...</p>
                  </div>
                  <button id="write-wish-btn" class="mt-4 w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition-transform transform hover:scale-105 flex items-center justify-center gap-2">
                     Tulis Ucapan Anda Di Sini ✍️
@@ -208,6 +208,24 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // --- LANGKAH PENTING: Sila pastikan anda telah set 'Security Rules' di Firebase Console! ---
+        // 1. Pergi ke projek Firebase anda ('birthdaysara-sara').
+        // 2. Di menu kiri, pilih 'Firestore Database'.
+        // 3. Klik pada tab 'Rules' di bahagian atas.
+        // 4. Gantikan semua teks di dalam editor dengan kod di bawah:
+        //
+        // rules_version = '2';
+        // service cloud.firestore {
+        //   match /databases/{database}/documents {
+        //     match /{document=**} {
+        //       allow read, write: if true;
+        //     }
+        //   }
+        // }
+        //
+        // 5. Klik 'Publish'. Buku ucapan anda kini sedia untuk digunakan!
+        // -----------------------------------------------------------------------------------------
+
         // --- FIREBASE SETUP ---
         const firebaseConfig = {
             apiKey: "AIzaSyAI6g4-ch-Esu3ZyuLkjarovGkCLQrAzec",
@@ -217,6 +235,7 @@
             messagingSenderId: "1095248630801",
             appId: "1:1095248630801:web:5989506025410abd09cdb0"
         };
+        const wishesStatus = document.getElementById('wishes-status');
         let db, auth;
 
         try {
@@ -225,7 +244,7 @@
             auth = getAuth(app);
         } catch (e) {
             console.error("Firebase initialization failed:", e);
-            document.getElementById('wishes-container').innerHTML = '<p class="text-red-500">Gagal menyambung ke pangkalan data. Sila pastikan konfigurasi Firebase betul.</p>';
+            wishesStatus.innerHTML = '<p class="text-red-500 font-bold">Gagal! Sila pastikan konfigurasi Firebase betul.</p>';
         }
 
         // --- AUTHENTICATION & DATA LISTENER ---
@@ -264,49 +283,43 @@
 
                 wishes.forEach((data, index) => {
                     const initial = data.name ? data.name.charAt(0).toUpperCase() : 'S';
-                    
                     const wishEl = document.createElement('div');
                     wishEl.className = 'flex items-start gap-3 w-full';
-                    
                     const avatarEl = document.createElement('div');
                     avatarEl.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-pink-200 flex items-center justify-center font-bold text-pink-600';
                     avatarEl.textContent = initial;
-
                     const bubbleEl = document.createElement('div');
                     bubbleEl.className = 'bg-white p-3 rounded-lg shadow-sm w-full';
-
                     const nameP = document.createElement('p');
                     nameP.className = 'font-bold text-pink-700';
                     nameP.textContent = data.name || 'Tetamu';
-                    
                     const messageP = document.createElement('p');
                     messageP.className = 'text-gray-700 text-sm mt-1';
                     messageP.textContent = data.message;
-                    
                     bubbleEl.appendChild(nameP);
                     bubbleEl.appendChild(messageP);
 
                     if (index % 2 === 0) {
-                        // Left side
                         wishEl.appendChild(avatarEl);
                         wishEl.appendChild(bubbleEl);
                         bubbleEl.classList.add('text-left');
                     } else {
-                        // Right side
                         wishEl.appendChild(bubbleEl);
                         wishEl.appendChild(avatarEl);
                         wishEl.classList.add('flex-row-reverse');
                         bubbleEl.classList.add('text-right');
                     }
-
                     wishesContainer.appendChild(wishEl);
                 });
             }, (error) => {
                 console.error("Error fetching wishes:", error);
-                document.getElementById('wishes-container').innerHTML = '<p class="text-red-500">Gagal memuatkan ucapan. Sila pastikan "Security Rules" di Firebase membenarkan "read".</p>';
+                const wishesContainer = document.getElementById('wishes-container');
+                wishesContainer.innerHTML = `<div class="text-red-600 bg-red-100 p-3 rounded-lg text-sm font-semibold">
+                    <p class="font-bold text-base">RALAT: Gagal memuatkan ucapan!</p>
+                    <p class="mt-1">Sila pastikan anda telah menetapkan 'Security Rules' di dalam Firebase Console anda. Rujuk komen di dalam kod untuk arahan.</p>
+                </div>`;
             });
         }
-
 
         // --- WISH SENDING FUNCTIONALITY ---
         const writeWishBtn = document.getElementById('write-wish-btn');
@@ -336,23 +349,8 @@
             const name = wishNameInput.value.trim();
             const message = wishTextarea.value.trim();
             
-            if (name === "") {
-                wishNameInput.placeholder = "Sila masukkan nama anda!";
-                wishNameInput.classList.add('border-red-500', 'placeholder-red-500');
-                setTimeout(() => {
-                    wishNameInput.placeholder = "Contoh: Pak Su & Mak Su";
-                    wishNameInput.classList.remove('border-red-500', 'placeholder-red-500');
-                }, 2500);
-                return;
-            }
-
-            if (message === "") {
-                wishTextarea.placeholder = "Sila tulis ucapan anda dahulu!";
-                wishTextarea.classList.add('border-red-500', 'placeholder-red-500');
-                setTimeout(() => {
-                    wishTextarea.placeholder = "Selamat hari jadi yang pertama, Sara! Semoga membesar menjadi anak yang solehah...";
-                    wishTextarea.classList.remove('border-red-500', 'placeholder-red-500');
-                }, 2500);
+            if (name === "" || message === "") {
+                alert("Sila masukkan nama dan ucapan anda.");
                 return;
             }
 
@@ -379,9 +377,7 @@
             }
         });
 
-
-        // --- EXISTING SCRIPT ---
-        // Countdown Timer Logic
+        // --- EXISTING SCRIPT (Countdown, Share, Confetti) ---
         function startCountdown() {
             const countdownContainer = document.getElementById('countdown-container');
             const daysEl = document.getElementById('days');
@@ -408,7 +404,7 @@
             }, 1000);
         }
 
-        function shareOnWhatsApp() {
+        window.shareOnWhatsApp = function() {
             const title = 'Jemputan Hari Jadi Sara! 🎂';
             const location = '8868 Desa Indah 3F, Dato Permaisuri, Permyjaya Miri.';
             const date = '4 Oktober 2025 (Sabtu), 12:30 Tengahari';
@@ -418,9 +414,8 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // Simple Confetti script
         window.onload = () => {
-            startCountdown(); // Start the countdown on load
+            startCountdown();
             const canvas = document.getElementById('confetti-canvas');
             const ctx = canvas.getContext('2d');
             const card = document.getElementById('invitation-card');
