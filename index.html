@@ -249,14 +249,29 @@
 
                     const bubbleEl = document.createElement('div');
                     bubbleEl.className = 'bg-white p-3 rounded-lg shadow-sm w-full';
+                    
                     const nameP = document.createElement('p');
                     nameP.className = 'font-bold text-pink-700';
                     nameP.textContent = data.name || 'Tetamu';
+                    
                     const messageP = document.createElement('p');
                     messageP.className = 'text-gray-700 text-sm mt-1';
                     messageP.textContent = data.message;
+
                     bubbleEl.appendChild(nameP);
                     bubbleEl.appendChild(messageP);
+
+                    // NEW: Add timestamp if it exists
+                    if (data.createdAt && data.createdAt.seconds) {
+                        const timestamp = new Date(data.createdAt.seconds * 1000);
+                        const formattedDate = timestamp.toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' });
+                        const formattedTime = timestamp.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+                        const timeP = document.createElement('p');
+                        timeP.className = 'text-gray-400 text-xs mt-2';
+                        timeP.textContent = `${formattedDate}, ${formattedTime}`;
+                        bubbleEl.appendChild(timeP);
+                    }
 
                     if (index % 2 === 0) {
                         wishEl.appendChild(avatarEl);
@@ -265,6 +280,7 @@
                     } else {
                         wishEl.appendChild(bubbleEl);
                         wishEl.appendChild(avatarEl);
+                        wishEl.classList.add('flex-row-reverse');
                         bubbleEl.classList.add('text-right');
                     }
                     wishesContainer.appendChild(wishEl);
